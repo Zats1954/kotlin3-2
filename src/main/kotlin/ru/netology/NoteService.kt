@@ -10,9 +10,9 @@ class NoteService {
         val newId = if (items.isEmpty()) {
             0
         } else {
-            items.get(items.lastIndex).id + 1
+            items[items.lastIndex].id + 1
         }
-        val newNote: Note = Note(id = newId, title = title, text = text)
+        val newNote = Note(id = newId, title = title, text = text)
         items.add(newNote)
         notes.count++
         return newId
@@ -24,8 +24,8 @@ class NoteService {
             count: Int = 20,
             sort: Int = 0): List<Note>? {
         val idNotes: List<Int> = noteIds.split(",").map { it.toInt() }
-        return if (idNotes.size > 0) {
-            items.filter { it -> idNotes.contains(it.id) }
+        return if (idNotes.isNotEmpty()) {
+            items.filter { idNotes.contains(it.id) }
                     .take(if (count < 100) count else 100)
         } else {
             items
@@ -36,8 +36,7 @@ class NoteService {
                 ownerId: Int = 0,
                 needWiki: Int = 0
     ): Note? {
-        items.filter { it.id == noteIds }
-                .firstOrNull()
+        items.firstOrNull { it.id == noteIds }
                 .let {
                     if (it == null) {
                         println("Ошибка 180 Заметка $noteIds не найдена ")
@@ -129,7 +128,7 @@ class NoteService {
 
     fun deleteComment(commentId: Int,
                       ownerId: Int = 0): Int {
-        for ((index, comment) in comments.withIndex()) {
+        for ( comment in comments) {
             if (comment.id == commentId && comment.oid == ownerId) {
                 comments = comments.filter { it.id != commentId || it.oid != ownerId }
                         .toTypedArray()
@@ -147,8 +146,7 @@ class NoteService {
 }
 
 class MyException(cod: Int?, message: String?) : Throwable() {
-    val errorN: Any = if (cod != null) println("Error $cod") else {
-    }
+    val errorN: Any = if (cod != null) println("Error $cod") else {}
     val errorMessage: Any = if (message != null) println(message) else {
     }
 }
