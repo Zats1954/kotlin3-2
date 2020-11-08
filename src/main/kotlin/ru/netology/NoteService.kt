@@ -1,12 +1,12 @@
 package ru.netology
 
 class NoteService {
-    var notes: Notes = Notes(items = emptyList<Note>().toMutableList())
-    var items: MutableList<Note> = notes.items
+    var items = mutableListOf<Note>()
     var comments = emptyArray<Comment>()
-    var countComments: Comments = Comments()
+    var countComments = Comments()
 
     fun add(title: String, text: String): Int {
+
         val newId = if (items.isEmpty()) {
             0
         } else {
@@ -14,7 +14,6 @@ class NoteService {
         }
         val newNote = Note(id = newId, title = title, text = text)
         items.add(newNote)
-        notes.count++
         return newId
     }
 
@@ -26,7 +25,6 @@ class NoteService {
         val idNotes: List<Int> = noteIds.split(",").map { it.toInt() }
         return if (idNotes.isNotEmpty()) {
             items.filter { idNotes.contains(it.id) }
-                    .take(if (count < 100) count else 100)
         } else {
             items
         }
@@ -39,7 +37,7 @@ class NoteService {
         items.firstOrNull { it.id == noteIds }
                 .let {
                     if (it == null) {
-                        println("Ошибка 180 Заметка $noteIds не найдена ")
+                        println("getById: Ошибка 180 Заметка $noteIds не найдена ")
                     }
                     return it
                 }
@@ -59,8 +57,7 @@ class NoteService {
                 return 1
             }
         }
-        println("Заметка $noteIds не найдена ")
-        return 180
+        throw NoteException(180, "edit: Заметка $noteIds не найдена ")
     }
 
     fun delete(noteIds: Int): Int {
@@ -68,85 +65,18 @@ class NoteService {
             if (note.id == noteIds) {
                 items.removeAt(index)
                 comments = comments.filter { it.nid == noteIds } //убираем комментарии к заметке
-                                   .toTypedArray()
-                countComments.count = comments.size
-                return 1
-            }
-        }
-        println("Заметка $noteIds не найдена ")
-        return 180
-    }
-
-    fun createComment(noteId: Int,
-                      ownerId: Int = 0,
-                      replyTo: Int? = null,
-                      message: String = "",
-                      guid: String = "0"
-    ): Int? {
-//        try {
-        for (comment in comments) {  // для предотвращения повторной отправки одинакового комментария
-            if (guid == comment.guid)
-                throw MyException(181, "Нет доступа к заметке $noteId")
-        }
-//        } catch(e: MyException ){
-//           e.printError(181, "Нет доступа к заметке")
-//            print("Нет доступа к заметке")
-//        }
-        val cid = if (comments.isEmpty()) 0
-        else comments.size
-        val newComment = Comment(id = cid,
-                nid = noteId,
-                oid = ownerId,
-                message = message,
-                replyTo = replyTo)
-        comments = comments.plusElement(newComment)
-        countComments.count++
-        return cid
-    }
-
-
-    fun getComments(noteId: Int,
-                    ownerId: Int = 0,
-                    sort: Int = 0,
-                    offset: Int = 0,
-                    count: Int = 20): List<Comment> {
-        return comments.filter { it.nid == noteId && it.oid == ownerId }
-                .take(if (count < 100) count else 100)
-    }
-
-    fun editComment(commentId: Int,
-                    ownerId: Int = 0,
-                    message: String = " "): Int {
-        comments.find { it.id == commentId && it.oid == ownerId }
-                .let {
-                    if (it != null) {
-                        it.message = message
-                        return 1
-                    } else throw MyException(183, "Нет доступа к комментарию $commentId")
-                }
-    }
-
-    fun deleteComment(commentId: Int,
-                      ownerId: Int = 0): Int {
-        for ( comment in comments) {
-            if (comment.id == commentId && comment.oid == ownerId) {
-                comments = comments.filter { it.id != commentId || it.oid != ownerId }
                         .toTypedArray()
                 countComments.count = comments.size
                 return 1
             }
         }
-        throw MyException(183, "Нет доступа к комментарию $commentId")
-    }
-
-    fun restoreComment(commentId: Int,
-                       ownerId: Int = 0): Int {
-        return 183
+        throw NoteException(180, "delete: Заметка $noteIds не найдена ")
     }
 }
 
-class MyException(cod: Int?, message: String?) : Throwable() {
-    val errorN: Any = if (cod != null) println("Error $cod") else {}
+class NoteException(cod: Int?, message: String?) : Throwable() {
+    val errorN: Any = if (cod != null) println("Error $cod") else {
+    }
     val errorMessage: Any = if (message != null) println(message) else {
     }
 }
